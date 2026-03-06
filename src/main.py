@@ -2,23 +2,35 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy import text
 from src.core.database import engine
+from src.auth.users import auth_backend, fastapi_users
+from src.auth.schemas import UserRead, UserCreate
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Проверка подключения к БД при старте
+    # Проверка подключения к БД
     try:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
             print("✅ Database connection successful")
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
-        # Здесь можно решить, завершать приложение или нет
-        # Для теста лучше завершить, чтобы Render показал ошибку
         raise e
     yield
     await engine.dispose()
 
 app = FastAPI(lifespan=lifespan)
+
+# Подключаем роутеры аутентификации
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth/jwt",
+    tags=["auth"]
+)
+app.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["auth"],
+)
 
 @app.get("/")
 async def root():
