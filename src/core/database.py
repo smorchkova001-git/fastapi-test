@@ -10,3 +10,5 @@ Base = declarative_base()
 async def get_session() -> AsyncSession:
     async with async_session_maker() as session:
         yield session
+
+get_async_session = get_session
