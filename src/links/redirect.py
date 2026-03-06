@@ -28,13 +28,13 @@ async def redirect_to_original(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Link not found"
         )
-    '''
+
     if link.expires_at and link.expires_at < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_410_GONE,
             detail="This link has expired"
         )
-    '''
+
 
     click = Click(
         link_id=link.id,

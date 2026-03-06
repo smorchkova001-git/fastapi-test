@@ -51,3 +51,17 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
+
+from sqlalchemy import text
+
+@app.get("/debug/check-expires-at")
+async def check_expires_at():
+    async with engine.connect() as conn:
+        result = await conn.execute(
+            text("SELECT column_name FROM information_schema.columns WHERE table_name='links' AND column_name='expires_at'")
+        )
+        row = result.fetchone()
+        if row:
+            return {"exists": True}
+        else:
+            return {"exists": False}

@@ -59,8 +59,8 @@ async def create_short_link(
         short_code=short_code,
         original_url=str(link_data.original_url),
         custom_alias=link_data.custom_alias,
-        user_id=user_id
-        #expires_at=link_data.expires_at
+        user_id=user_id,
+        expires_at=link_data.expires_at
     )
     session.add(new_link)
     await session.commit()
@@ -102,6 +102,7 @@ async def get_unused_links(
 @router.get("/{short_code}/qr")
 async def get_qr_code(
     short_code: str,
+    request: Request,
     session: AsyncSession = Depends(get_async_session)
 ):
     result = await session.execute(
@@ -113,7 +114,10 @@ async def get_qr_code(
         raise HTTPException(status_code=404, detail="Link not found")
     
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(f"http://localhost:9999/{short_code}")
+    
+    base_url = str(request.base_url).rstrip('/')
+    short_url = f"{base_url}/{short_code}"
+    qr.add_data(short_url)
     qr.make(fit=True)
     
     img = qr.make_image(fill_color="black", back_color="white")
