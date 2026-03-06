@@ -6,6 +6,8 @@ from src.core.cache import init_cache
 from fastapi_cache import FastAPICache
 from src.auth.users import auth_backend, fastapi_users
 from src.auth.schemas import UserRead, UserCreate
+from src.links.router import router as links_router
+from src.links.redirect import router as redirect_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -38,6 +40,9 @@ app.include_router(
     prefix="/auth",
     tags=["auth"],
 )
+
+app.include_router(redirect_router)  # для редиректа без префикса
+app.include_router(links_router, prefix="/links")
 
 @app.get("/")
 async def root():
