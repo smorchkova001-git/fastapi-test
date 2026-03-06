@@ -65,3 +65,25 @@ async def check_expires_at():
             return {"exists": True}
         else:
             return {"exists": False}
+
+from sqlalchemy import text
+
+@app.get("/debug/check-migrations")
+async def check_migrations():
+    async with engine.connect() as conn:
+        # Проверка username в таблице user
+        result = await conn.execute(
+            text("SELECT column_name FROM information_schema.columns WHERE table_name='user' AND column_name='username'")
+        )
+        username_exists = result.fetchone() is not None
+        
+        # Проверка expires_at в таблице links
+        result = await conn.execute(
+            text("SELECT column_name FROM information_schema.columns WHERE table_name='links' AND column_name='expires_at'")
+        )
+        expires_at_exists = result.fetchone() is not None
+        
+        return {
+            "username_exists": username_exists,
+            "expires_at_exists": expires_at_exists
+        }
