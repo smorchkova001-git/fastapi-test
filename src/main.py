@@ -2,12 +2,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy import text
 from src.core.database import engine
+from src.core.cache import init_cache
+from fastapi_cache import FastAPICache
 from src.auth.users import auth_backend, fastapi_users
 from src.auth.schemas import UserRead, UserCreate
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Проверка подключения к БД
+    # Проверка БД
     try:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
@@ -15,8 +17,13 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
         raise e
+    # Инициализация Redis
+    await init_cache()
+    print("✅ Redis cache initialized")
     yield
+    await FastAPICache.clear()
     await engine.dispose()
+
 
 app = FastAPI(lifespan=lifespan)
 
